@@ -1,0 +1,119 @@
+Hello dear AI, please upgrade the application I have described in below files and enhance it for
+........................
+
+./
+    ai.py
+    README.md
+ai/
+    state-2024-11-19-07-53-26.txt
+
+
+--- Start of .\ai.py ---
+
+import os
+import datetime
+import stat
+
+def is_hidden(filepath):
+    name = os.path.basename(os.path.abspath(filepath))
+    if name.startswith('.'):
+        return True
+    try:
+        attrs = os.stat(filepath).st_file_attributes
+        return bool(attrs & stat.FILE_ATTRIBUTE_HIDDEN)
+    except AttributeError:
+        return False
+
+def generate_ascii_tree(startpath):
+    tree_str = ''
+    for root, dirs, files in os.walk(startpath):
+        # Determine the relative path from startpath
+        relpath = os.path.relpath(root, startpath)
+        if relpath == '.':
+            relpath = ''
+        # Determine the level (depth) in the directory tree
+        level = relpath.count(os.sep)
+        indent = ' ' * 4 * level
+        dirname = os.path.basename(root)
+        tree_str += '{}{}/\n'.format(indent, dirname)
+        subindent = ' ' * 4 * (level + 1)
+        
+        # Determine if we are in 'Src' or under it
+        path_parts = os.path.normpath(root).split(os.sep)
+        if 'Src' in path_parts:
+            # Include hidden files and dirs
+            pass  # Do nothing
+        else:
+            # Exclude hidden files and dirs
+            dirs[:] = [d for d in dirs if not is_hidden(os.path.join(root, d))]
+            files = [f for f in files if not is_hidden(os.path.join(root, f))]
+        for f in files:
+            tree_str += '{}{}\n'.format(subindent, f)
+    return tree_str
+
+def main():
+    # Create 'ai' directory if it doesn't exist
+    ai_dir = os.path.join(os.getcwd(), 'ai')
+    if not os.path.exists(ai_dir):
+        os.makedirs(ai_dir)
+    
+    # Get current datetime for filename
+    now = datetime.datetime.now()
+    filename = now.strftime('state-%Y-%m-%d-%H-%M-%S.txt')
+    output_file_path = os.path.join(ai_dir, filename)
+    
+    with open(output_file_path, 'w', encoding='utf-8') as f:
+        # Write the initial text
+        f.write('Hello dear AI, please upgrade the application I have described in below files and enhance it for\n')
+        f.write('........................\n\n')
+        
+        # Generate the ascii tree and write to file
+        tree = generate_ascii_tree('.')
+        f.write(tree)
+        
+        # Then write the contents of all files
+        for root, dirs, files in os.walk('.'):
+            # Determine if we are in 'Src' or under it
+            path_parts = os.path.normpath(root).split(os.sep)
+            if 'Src' in path_parts:
+                # Include hidden files and dirs
+                pass  # Do nothing
+            else:
+                # Exclude hidden files and dirs
+                dirs[:] = [d for d in dirs if not is_hidden(os.path.join(root, d))]
+                files = [f for f in files if not is_hidden(os.path.join(root, f))]
+            for file in files:
+                full_file_path = os.path.join(root, file)
+                # Skip the output file itself
+                if os.path.abspath(full_file_path) == os.path.abspath(output_file_path):
+                    continue
+                try:
+                    with open(full_file_path, 'r', encoding='utf-8', errors='ignore') as content_file:
+                        f.write(f'\n\n--- Start of {full_file_path} ---\n\n')
+                        f.write(content_file.read())
+                        f.write(f'\n\n--- End of {full_file_path} ---\n\n')
+                except Exception as e:
+                    f.write(f'\n\n--- Could not read {full_file_path}: {e} ---\n\n')
+
+if __name__ == '__main__':
+    main()
+
+
+--- End of .\ai.py ---
+
+
+
+--- Start of .\README.md ---
+
+write me a python script please, that will do:
+
+- after i will run it, it will generate a text file inside a direcotry caller "ai" and there it will create a file called "state-YYYY-MM-DD-G-i-s.txt
+- and the file will containe at top the text:
+"Hello dear AI, please upgrade the applicaiton i have described in below files and enhance it for
+........................
+"
+- and then the script will paste a tree of files in ascii tree for the current directory and all its subfiles including the hidden for directory "Src".
+- then the script will copy contents of all files inside the directory and will paste their contencts inside the text file
+
+--- End of .\README.md ---
+
