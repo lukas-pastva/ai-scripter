@@ -1,6 +1,7 @@
 import os
 import datetime
 import stat
+from fnmatch import fnmatch
 
 def is_hidden(filepath):
     """
@@ -16,9 +17,37 @@ def is_hidden(filepath):
         # Non-Windows systems may not have st_file_attributes
         return False
 
-def generate_ascii_tree(startpath):
+def load_gitignore_patterns(base_path):
     """
-    Generate an ASCII tree representation of the current directory.
+    Load .gitignore patterns from the .gitignore file if it exists.
+    Returns a list of patterns.
+    """
+    gitignore_path = os.path.join(base_path, '.gitignore')
+    patterns = []
+    if os.path.exists(gitignore_path):
+        with open(gitignore_path, 'r', encoding='utf-8', errors='ignore') as g:
+            for line in g:
+                line = line.strip()
+                # Exclude comments and blank lines
+                if line and not line.startswith('#'):
+                    patterns.append(line)
+    return patterns
+
+def should_ignore(name, ignore_patterns):
+    """
+    Check if a file or directory name should be ignored based on .gitignore patterns.
+    """
+    for pattern in ignore_patterns:
+        # If pattern doesn't start with '/', we treat it as matching anywhere.
+        # Simple approach: just fnmatch the filename.
+        if fnmatch(name, pattern):
+            return True
+    return False
+
+def generate_ascii_tree(startpath, ignore_patterns):
+    """
+    Generate an ASCII tree representation of the current directory,
+    excluding hidden files, directories, the ai directory, and files/directories specified in .gitignore.
     """
     tree_str = ''
     for root, dirs, files in os.walk(startpath):
@@ -30,12 +59,20 @@ def generate_ascii_tree(startpath):
         level = relpath.count(os.sep)
         indent = ' ' * 4 * level
         dirname = os.path.basename(root) if root != startpath else os.path.basename(startpath) or '.'
+
+        # Exclude hidden directories, 'ai' directory, and gitignored directories
+        dirs[:] = [d for d in dirs 
+                   if not is_hidden(os.path.join(root, d)) 
+                   and d != 'ai' 
+                   and not should_ignore(d, ignore_patterns)]
+
+        # Exclude hidden files and gitignored files
+        files = [f for f in files 
+                 if not is_hidden(os.path.join(root, f)) 
+                 and not should_ignore(f, ignore_patterns)]
+
         tree_str += '{}{}/\n'.format(indent, dirname)
         subindent = ' ' * 4 * (level + 1)
-        
-        # Exclude hidden files and directories
-        dirs[:] = [d for d in dirs if not is_hidden(os.path.join(root, d))]
-        files = [f for f in files if not is_hidden(os.path.join(root, f))]
         
         for f in files:
             tree_str += '{}{}\n'.format(subindent, f)
@@ -64,7 +101,10 @@ def should_skip_file(file_name):
 def main():
     current_dir = os.getcwd()
     
-    # Create 'ai' directory if it doesn't exist
+    # Load .gitignore patterns
+    ignore_patterns = load_gitignore_patterns(current_dir)
+
+    # Create 'ai' directory if it doesn't exist (excluded from scanning but we still need it as output target)
     ai_dir = os.path.join(current_dir, 'ai')
     if not os.path.exists(ai_dir):
         os.makedirs(ai_dir)
@@ -80,14 +120,21 @@ def main():
         f.write('........................\n\n')
         
         # Generate the ASCII tree for the current directory and write to file
-        tree = generate_ascii_tree(current_dir)
+        tree = generate_ascii_tree(current_dir, ignore_patterns)
         f.write(tree)
         
         # Then write the contents of all files within the current directory
         for root, dirs, files in os.walk(current_dir):
-            # Exclude hidden files and directories
-            dirs[:] = [d for d in dirs if not is_hidden(os.path.join(root, d))]
-            files = [f_name for f_name in files if not is_hidden(os.path.join(root, f_name))]
+            # Exclude hidden directories, 'ai', and gitignored directories
+            dirs[:] = [d for d in dirs 
+                       if not is_hidden(os.path.join(root, d)) 
+                       and d != 'ai' 
+                       and not should_ignore(d, ignore_patterns)]
+
+            # Exclude hidden and gitignored files
+            files = [f_name for f_name in files 
+                     if not is_hidden(os.path.join(root, f_name)) 
+                     and not should_ignore(f_name, ignore_patterns)]
 
             for file in files:
                 full_file_path = os.path.join(root, file)
@@ -96,7 +143,7 @@ def main():
                 if os.path.abspath(full_file_path) == os.path.abspath(output_file_path):
                     continue
                 
-                # Skip files we don't want to include
+                # Skip files we don't want to include (images, license)
                 if should_skip_file(full_file_path):
                     continue
                 
