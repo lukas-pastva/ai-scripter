@@ -41,6 +41,26 @@ def generate_ascii_tree(startpath):
             tree_str += '{}{}\n'.format(subindent, f)
     return tree_str
 
+def should_skip_file(file_name):
+    """
+    Determine if a file should be skipped from being read and included in the state file.
+    We skip image files and LICENSE files.
+    """
+    # Common image extensions
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.svg', '.tif', '.tiff'}
+    base_name = os.path.basename(file_name).lower()
+    _, ext = os.path.splitext(base_name)
+    
+    # Check for images
+    if ext in image_extensions:
+        return True
+    
+    # Check for license files
+    if base_name == 'license' or base_name.startswith('license.'):
+        return True
+    
+    return False
+
 def main():
     current_dir = os.getcwd()
     
@@ -71,9 +91,15 @@ def main():
 
             for file in files:
                 full_file_path = os.path.join(root, file)
-                # Skip the output file itself if it's inside the current directory
+                
+                # Skip if it's the output file itself
                 if os.path.abspath(full_file_path) == os.path.abspath(output_file_path):
                     continue
+                
+                # Skip files we don't want to include
+                if should_skip_file(full_file_path):
+                    continue
+                
                 try:
                     with open(full_file_path, 'r', encoding='utf-8', errors='ignore') as content_file:
                         relative_path = os.path.relpath(full_file_path, current_dir)
