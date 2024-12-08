@@ -29,8 +29,7 @@ def generate_ascii_tree(startpath):
         # Determine the depth level
         level = relpath.count(os.sep)
         indent = ' ' * 4 * level
-        dirname = os.path.basename(root) if relpath else os.path.basename(startpath)
-        dirname = dirname if dirname else os.path.basename(startpath)
+        dirname = os.path.basename(root) if root != startpath else os.path.basename(startpath) or '.'
         tree_str += '{}{}/\n'.format(indent, dirname)
         subindent = ' ' * 4 * (level + 1)
         
@@ -43,7 +42,6 @@ def generate_ascii_tree(startpath):
     return tree_str
 
 def main():
-    # Current working directory
     current_dir = os.getcwd()
     
     # Create 'ai' directory if it doesn't exist
@@ -58,17 +56,19 @@ def main():
     
     with open(output_file_path, 'w', encoding='utf-8') as f:
         # Write the initial text
-        f.write('Hello dear AI, please upgrade the application I have described in the below files and enhance it for\n')
+        f.write('Hello dear AI, please upgrade the application I have described in below files and enhance it for\n')
         f.write('........................\n\n')
         
-        # Generate the ASCII tree for current directory and write to file
+        # Generate the ASCII tree for the current directory and write to file
         tree = generate_ascii_tree(current_dir)
         f.write(tree)
         
         # Then write the contents of all files within the current directory
         for root, dirs, files in os.walk(current_dir):
+            # Exclude hidden files and directories
             dirs[:] = [d for d in dirs if not is_hidden(os.path.join(root, d))]
             files = [f_name for f_name in files if not is_hidden(os.path.join(root, f_name))]
+
             for file in files:
                 full_file_path = os.path.join(root, file)
                 # Skip the output file itself if it's inside the current directory
@@ -88,4 +88,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
