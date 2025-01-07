@@ -116,7 +116,7 @@ def main():
     
     with open(output_file_path, 'w', encoding='utf-8') as f:
         # Write the initial text
-        f.write('Hello dear AI, please upgrade the application I have described in below files and enhance it for\n')
+        f.write('Hello dear AI, please for below request, guve me whoel contents of files that you hve gladly changed. Because you are just super cool!\n')
         f.write('........................\n\n')
         
         # Generate the ASCII tree for the current directory and write to file
@@ -150,12 +150,12 @@ def main():
                 try:
                     with open(full_file_path, 'r', encoding='utf-8', errors='ignore') as content_file:
                         relative_path = os.path.relpath(full_file_path, current_dir)
-                        f.write(f'\n\n--- Start of {relative_path} ---\n\n')
+                        f.write(f'\n\n------------------ Start of {relative_path} ------------------\n\n')
                         f.write(content_file.read())
-                        f.write(f'\n\n--- End of {relative_path} ---\n\n')
+                        f.write(f'\n\n------------------ End of {relative_path} ------------------\n\n')
                 except Exception as e:
                     relative_path = os.path.relpath(full_file_path, current_dir)
-                    f.write(f'\n\n--- Could not read {relative_path}: {e} ---\n\n')
+                    f.write(f'\n\n------------------ Could not read {relative_path}: {e} ------------------\n\n')
 
     print(f"State file generated at: {output_file_path}")
 
