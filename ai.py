@@ -47,7 +47,7 @@ def should_ignore(name, ignore_patterns):
 def generate_ascii_tree(startpath, ignore_patterns):
     """
     Generate an ASCII tree representation of the current directory,
-    excluding hidden files, directories, the ai directory, and files/directories specified in .gitignore.
+    excluding hidden files, directories, the tmp directory, and files/directories specified in .gitignore.
     """
     tree_str = ''
     for root, dirs, files in os.walk(startpath):
@@ -60,10 +60,10 @@ def generate_ascii_tree(startpath, ignore_patterns):
         indent = ' ' * 4 * level
         dirname = os.path.basename(root) if root != startpath else os.path.basename(startpath) or '.'
 
-        # Exclude hidden directories, 'ai' directory, and gitignored directories
+        # Exclude hidden directories, 'tmp' directory, and gitignored directories
         dirs[:] = [d for d in dirs 
                    if not is_hidden(os.path.join(root, d)) 
-                   and d != 'ai' 
+                   and d != 'tmp' 
                    and not should_ignore(d, ignore_patterns)]
 
         # Exclude hidden files and gitignored files
@@ -104,19 +104,19 @@ def main():
     # Load .gitignore patterns
     ignore_patterns = load_gitignore_patterns(current_dir)
 
-    # Create 'ai' directory if it doesn't exist (excluded from scanning but we still need it as output target)
-    ai_dir = os.path.join(current_dir, 'ai')
-    if not os.path.exists(ai_dir):
-        os.makedirs(ai_dir)
+    # Create 'tmp' directory if it doesn't exist (excluded from scanning but we still need it as output target)
+    tmp_dir = os.path.join(current_dir, 'tmp')
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
     
     # Get current datetime for filename
     now = datetime.datetime.now()
     filename = now.strftime('state-%Y-%m-%d-%H-%M-%S.txt')
-    output_file_path = os.path.join(ai_dir, filename)
+    output_file_path = os.path.join(tmp_dir, filename)
     
     with open(output_file_path, 'w', encoding='utf-8') as f:
         # Write the initial text
-        f.write('Hello dear AI, please for below request, guve me whoel contents of files that you hve gladly changed. Because you are just super cool!\n')
+        f.write('Hello dear AI, please for below request, give me whole contents of files that changed (not the ones that idd not change).\n')
         f.write('........................\n\n')
         
         # Generate the ASCII tree for the current directory and write to file
@@ -125,10 +125,10 @@ def main():
         
         # Then write the contents of all files within the current directory
         for root, dirs, files in os.walk(current_dir):
-            # Exclude hidden directories, 'ai', and gitignored directories
+            # Exclude hidden directories, 'tmp', and gitignored directories
             dirs[:] = [d for d in dirs 
                        if not is_hidden(os.path.join(root, d)) 
-                       and d != 'ai' 
+                       and d != 'tmp' 
                        and not should_ignore(d, ignore_patterns)]
 
             # Exclude hidden and gitignored files

@@ -21,7 +21,7 @@ Prerequisites
 Installation
 ------------
 
-1.  **Download the Script:** Save `ai-scripter.py` to a directory, e.g., `C:\Scripts`.
+1.  **Download the Script:** Save `ai.py` to a directory, e.g., `C:\Scripts`.
     
 2.  **Add to PATH:**
     
@@ -33,11 +33,18 @@ Installation
     *   Open PowerShell as Administrator.
     *   Run:
          
-      ```powershell
+      ```cmd
       assoc .py=Python.File
       ftype Python.File="C:\Path\To\Python\python.exe" "%1" %*
       ```
         
+      ```powershell
+      Set-ItemProperty -Path "HKLM:\Software\Classes\.py" -Name "(Default)" -Value "Python.File"
+      Set-ItemProperty -Path "HKLM:\Software\Classes\Python.File\shell\open\command" -Name "(Default)" -Value '"C:\Path\To\Python.exe" "%1" %*'
+      ```
+
+
+
         Replace `C:\Path\To\Python\python.exe` with your Python installation path.
 
 Usage
@@ -52,7 +59,7 @@ Usage
 2.  **Run AI-Scripter:**
     
       ```powershell
-      ai-scripter.py
+      ai.py
       ```
 
     This creates an `ai` directory with a `state-YYYY-MM-DD-HH-MM-SS.txt` file containing the ASCII tree and file contents.
@@ -71,10 +78,10 @@ C:\Projects\MyProject
 ├── .hidden_file.py
 │
 ├── README.md
-└── ai-scripter.py  (located in C:\Scripts)
+└── ai.py  (located in C:\Scripts)
 ```
 
-Running `ai-scripter.py` inside `C:\Projects\MyProject` will generate:
+Running `ai.py` inside `C:\Projects\MyProject` will generate:
 
 ```makerfile
 C:\Projects\MyProject\ai\state-2024-12-08-15-30-45.txt
