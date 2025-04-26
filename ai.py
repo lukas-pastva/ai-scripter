@@ -61,15 +61,19 @@ def generate_ascii_tree(startpath, ignore_patterns):
         dirname = os.path.basename(root) if root != startpath else os.path.basename(startpath) or '.'
 
         # Exclude hidden directories, 'tmp' directory, and gitignored directories
-        dirs[:] = [d for d in dirs 
-                   if not is_hidden(os.path.join(root, d)) 
-                   and d != 'tmp' 
-                   and not should_ignore(d, ignore_patterns)]
+        dirs[:] = [
+            d for d in dirs 
+            if not is_hidden(os.path.join(root, d)) 
+            and d != 'tmp' 
+            and not should_ignore(d, ignore_patterns)
+        ]
 
         # Exclude hidden files and gitignored files
-        files = [f for f in files 
-                 if not is_hidden(os.path.join(root, f)) 
-                 and not should_ignore(f, ignore_patterns)]
+        files = [
+            f for f in files
+            if not is_hidden(os.path.join(root, f)) 
+            and not should_ignore(f, ignore_patterns)
+        ]
 
         tree_str += '{}{}/\n'.format(indent, dirname)
         subindent = ' ' * 4 * (level + 1)
@@ -81,10 +85,14 @@ def generate_ascii_tree(startpath, ignore_patterns):
 def should_skip_file(file_name):
     """
     Determine if a file should be skipped from being read and included in the state file.
-    We skip image files and LICENSE files.
+    We skip image files, LICENSE files, and now we also skip wildcard patterns (e.g., jquery*.js).
     """
     # Common image extensions
-    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.svg', '.tif', '.tiff'}
+    image_extensions = {
+        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.svg',
+        '.tif', '.tiff', '.jar', '.gif', '.scss', '.png', '.eot',
+        '.ttf', '.woff', '.otf', '.woff2', '.less'
+    }
     base_name = os.path.basename(file_name).lower()
     _, ext = os.path.splitext(base_name)
     
@@ -95,6 +103,12 @@ def should_skip_file(file_name):
     # Check for license files
     if base_name == 'license' or base_name.startswith('license.'):
         return True
+
+    # Wildcard ignores (add as many patterns as needed)
+    wildcard_ignores = ['jquery*.js', 'bootstrap*css']
+    for pattern in wildcard_ignores:
+        if fnmatch(base_name, pattern):
+            return True
     
     return False
 
@@ -104,7 +118,7 @@ def main():
     # Load .gitignore patterns
     ignore_patterns = load_gitignore_patterns(current_dir)
 
-    # Create 'tmp' directory if it doesn't exist (excluded from scanning but we still need it as output target)
+    # Create 'tmp' directory if it doesn't exist (excluded from scanning but we still need it)
     tmp_dir = os.path.join(current_dir, 'tmp')
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
@@ -116,7 +130,7 @@ def main():
     
     with open(output_file_path, 'w', encoding='utf-8') as f:
         # Write the initial text
-        f.write('Hello dear AI, please for below request, give me whole contents of files that changed (not the ones that idd not change).\n')
+        f.write('Hello dear AI, please for below request, give me whole contents of files that changed (not the ones that did not change).\n')
         f.write('........................\n\n')
         
         # Generate the ASCII tree for the current directory and write to file
@@ -126,15 +140,19 @@ def main():
         # Then write the contents of all files within the current directory
         for root, dirs, files in os.walk(current_dir):
             # Exclude hidden directories, 'tmp', and gitignored directories
-            dirs[:] = [d for d in dirs 
-                       if not is_hidden(os.path.join(root, d)) 
-                       and d != 'tmp' 
-                       and not should_ignore(d, ignore_patterns)]
+            dirs[:] = [
+                d for d in dirs 
+                if not is_hidden(os.path.join(root, d)) 
+                and d != 'tmp' 
+                and not should_ignore(d, ignore_patterns)
+            ]
 
             # Exclude hidden and gitignored files
-            files = [f_name for f_name in files 
-                     if not is_hidden(os.path.join(root, f_name)) 
-                     and not should_ignore(f_name, ignore_patterns)]
+            files = [
+                f_name for f_name in files 
+                if not is_hidden(os.path.join(root, f_name)) 
+                and not should_ignore(f_name, ignore_patterns)
+            ]
 
             for file in files:
                 full_file_path = os.path.join(root, file)
@@ -143,7 +161,7 @@ def main():
                 if os.path.abspath(full_file_path) == os.path.abspath(output_file_path):
                     continue
                 
-                # Skip files we don't want to include (images, license)
+                # Skip files we don't want to include (images, license, wildcard patterns)
                 if should_skip_file(full_file_path):
                     continue
                 
