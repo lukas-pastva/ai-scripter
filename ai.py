@@ -119,9 +119,17 @@ def main():
     timestamp = datetime.datetime.now().strftime('state-%Y-%m-%d-%H-%M-%S.txt')
     output_file = os.path.join(tmp_dir, timestamp)
 
+    # Console greeting
+    print("Welcome to AI-Scripter! Preparing scan...")
+
     with open(output_file, 'w', encoding='utf-8') as out:
-        out.write('Hello dear AI, please for below request, give me whole contents of files that changed (not the ones that did not change).\n')
-        out.write('........................\n\n')
+        intro_text = (
+            "Welcome to AI-Scripter!\n"
+            f"Generated on {datetime.datetime.now().isoformat(timespec='seconds')} for directory: {cwd}\n\n"
+            "Hello dear AI, please for below request, give me whole contents of files that changed (not the ones that did not change).\n"
+            "........................\n\n"
+        )
+        out.write(intro_text)
 
         # 1) Directory tree (skipping the SKIP_* files)
         out.write(generate_ascii_tree(cwd, ignore_patterns))
